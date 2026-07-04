@@ -35,11 +35,14 @@ class Window:
                 NSMiniaturizableWindowMask |
                 NSResizableWindowMask
             )
+            
+            self.width = 200
+            self.height = 200
 
             self.window = (
                 NSWindow.alloc()
                 .initWithContentRect_styleMask_backing_defer_(
-                    NSMakeRect(0,0,200,200),
+                    NSMakeRect(0,0,self.width,self.height),
                     style,
                     NSBackingStoreBuffered,
                     False,
@@ -81,7 +84,10 @@ class Window:
         NSApp.run()
         
     def set_size(self,width,height):
+        self.width = width
+        self.height = height
         self.window.setContentSize_((width,height))
+        self.layout_y = self.window.contentView().frame().size.height-self.layout_margin_top
     
 #MARK: Label    
 class Label:
@@ -298,3 +304,11 @@ class List(NSObject):
     
     def show_scrollbar(self,show=True):
         self.w.setHasVerticalScroller_(show)
+        
+if __name__ == "__main__":
+    win = Window()
+    win.set_title("Test Window")
+    win.set_size(400,300)
+    label = Label("Hello, World!")
+    win.add_widget(label)
+    win.run()
