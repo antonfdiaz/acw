@@ -300,13 +300,58 @@ class Table(NSObject):
 
         return self
 
+    @objc.python_method
     def set_size(self,width,height):
         self.w.setFrameSize_((width,height))
         self.table.setFrameSize_((width,height))
 
+    @objc.python_method
     def add_row(self,row_data):
         self.rows.append(list(row_data))
         self.table.reloadData()
+
+    @objc.python_method
+    def clear_rows(self):
+        self.rows.clear()
+        self.table.reloadData()
+
+    @objc.python_method
+    def set_multi_selection(self,enabled):
+        if enabled:
+            self.table.setAllowsMultipleSelection_(True)
+        else:
+            self.table.setAllowsMultipleSelection_(False)
+
+    @objc.python_method
+    def get_selected(self):
+        selected_indexes = self.table.selectedRowIndexes()
+        return [self.rows[i] for i in range(len(self.rows)) if selected_indexes.containsIndex_(i)]
+
+    @objc.python_method
+    def deselect_all(self):
+        self.table.deselectAll_(None)
+
+    @objc.python_method
+    def set_background_color(self,color):
+        color = NSColor.colorWithCalibratedRed_green_blue_alpha_(int(color[1:3],16)/255.0,int(color[3:5],16)/255.0,int(color[5:7],16)/255.0,1.0)
+        self.table.setBackgroundColor_(color)
+        self.table.setNeedsDisplay_(True)
+
+    @objc.python_method
+    def set_text_color(self,color):
+        color = NSColor.colorWithCalibratedRed_green_blue_alpha_(int(color[1:3],16)/255.0,int(color[3:5],16)/255.0,int(color[5:7],16)/255.0,1.0)
+        for column in self.table.tableColumns():
+            column.dataCell().setTextColor_(color)
+        self.table.setNeedsDisplay_(True)
+
+    @objc.python_method
+    def set_font(self,font):
+        if isinstance(font,tuple) and len(font) == 2:
+            font = NSFont.fontWithName_size_(font[0],font[1])
+        if font is not None:
+            for column in self.table.tableColumns():
+                column.dataCell().setFont_(font)
+            self.table.setNeedsDisplay_(True)
 
     def numberOfRowsInTableView_(self,tableView):
         return len(self.rows)
@@ -317,6 +362,7 @@ class Table(NSObject):
             return str(self.rows[row][col_index])
         return ""
     
+    @objc.python_method
     def show_scrollbar(self,show=True):
         self.w.setHasVerticalScroller_(show)
     
@@ -361,6 +407,49 @@ class List(NSObject):
     def add_row(self,text):
         self.rows.append(str(text))
         self.table.reloadData()
+        
+    @objc.python_method
+    def clear_rows(self):
+        self.rows.clear()
+        self.table.reloadData()
+        
+    @objc.python_method
+    def set_multi_selection(self,enabled):
+        if enabled:
+            self.table.setAllowsMultipleSelection_(True)
+        else:
+            self.table.setAllowsMultipleSelection_(False)
+            
+    @objc.python_method
+    def get_selected(self):
+        selected_indexes = self.table.selectedRowIndexes()
+        return [self.rows[i] for i in range(len(self.rows)) if selected_indexes.containsIndex_(i)]
+    
+    @objc.python_method
+    def deselect_all(self):
+        self.table.deselectAll_(None)
+        
+    @objc.python_method
+    def set_background_color(self,color):
+        color = NSColor.colorWithCalibratedRed_green_blue_alpha_(int(color[1:3],16)/255.0,int(color[3:5],16)/255.0,int(color[5:7],16)/255.0,1.0)
+        self.table.setBackgroundColor_(color)
+        self.table.setNeedsDisplay_(True)
+    
+    @objc.python_method
+    def set_text_color(self,color):
+        color = NSColor.colorWithCalibratedRed_green_blue_alpha_(int(color[1:3],16)/255.0,int(color[3:5],16)/255.0,int(color[5:7],16)/255.0,1.0)
+        column = self.table.tableColumns()[0]
+        column.dataCell().setTextColor_(color)
+        self.table.setNeedsDisplay_(True)
+    
+    @objc.python_method
+    def set_font(self,font):
+        if isinstance(font,tuple) and len(font) == 2:
+            font = NSFont.fontWithName_size_(font[0],font[1])
+        if font is not None:
+            column = self.table.tableColumns()[0]
+            column.dataCell().setFont_(font)
+            self.table.setNeedsDisplay_(True)
 
     def numberOfRowsInTableView_(self,tableView):
         return len(self.rows)
@@ -375,6 +464,13 @@ class List(NSObject):
         
 #MARK: Demo
 if __name__ == "__main__":
+    from alerts import Alert
+    def show_msg():
+        selected_items = list_widget.get_selected()
+        if selected_items:
+            Alert.show("Selected Items", "\n".join(selected_items))
+        else:
+            Alert.show("No Selection", "No items selected.")
     win = Window()
     win.set_title("demo")
     win.set_size(400,300)
@@ -383,23 +479,17 @@ if __name__ == "__main__":
     label.set_size(400,30)
     label.set_font(("Arial",18))
     win.add_widget(label)
-    textfield = TextField("Default text","Placeholder text")
-    textfield.set_background_color("#FF0000")
-    textfield.set_text_color("#FFFFFF")
-    textfield.set_bezeled(False)
-    win.add_widget(textfield)
-    textarea = TextArea("Default text in textarea","Placeholder text in textarea")
-    textarea.set_background_color("#00FF00")
-    textarea.set_text_color("#000000")
-    textarea.set_font(("Comic Sans MS",12))
-    win.add_widget(textarea)
-    btn = Button("Purple button!",lambda: print("Button clicked!"))
-    btn.set_bezel_color("#2F001FFF")
-    win.add_widget(btn)
-    btn = Button("Blue button!",lambda: print("Button clicked!"))
-    btn.set_bezel_color("#00357AFF")
-    win.add_widget(btn)
-    btn = Button("Custom font!",lambda: print("Button clicked!"))
-    btn.set_font(("Courier",12))
-    win.add_widget(btn)
+    list_widget = List()
+    list_widget.set_size(400,200)
+    list_widget.add_row("Item 1")
+    list_widget.add_row("Item 2")
+    list_widget.add_row("Item 3")
+    list_widget.set_multi_selection(True)
+    list_widget.set_background_color("#000000")
+    list_widget.set_text_color("#FFFFFF")
+    list_widget.set_font(("Courier",14))
+    win.add_widget(list_widget)
+    button = Button("Get Selected",show_msg)
+    button.set_font(("Arial",14))
+    win.add_widget(button)
     win.run()
