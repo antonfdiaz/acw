@@ -18,6 +18,7 @@ from AppKit import (
     NSTableColumn,
     NSViewMinYMargin,
     NSViewWidthSizable,
+    NSColor,
 )
 from objc import super
 from Foundation import NSObject,NSMakePoint
@@ -108,6 +109,11 @@ class Label:
         
     def set_size(self,width,height):
         self.w.setFrameSize_((width,height))
+        
+    def set_text_color(self,color):
+        color = NSColor.colorWithCalibratedRed_green_blue_alpha_(int(color[1:3],16)/255.0,int(color[3:5],16)/255.0,int(color[5:7],16)/255.0,1.0)
+        self.w.setTextColor_(color)
+        self.w.setNeedsDisplay_(True)
    
 #MARK: TextField     
 class TextField:
@@ -131,6 +137,20 @@ class TextField:
         
     def set_size(self,width,height):
         self.w.setFrameSize_((width,height))
+        
+    def set_background_color(self,color):
+        color = NSColor.colorWithCalibratedRed_green_blue_alpha_(int(color[1:3],16)/255.0,int(color[3:5],16)/255.0,int(color[5:7],16)/255.0,1.0)
+        self.w.setBackgroundColor_(color)
+        self.w.setNeedsDisplay_(True)
+        
+    def set_text_color(self,color):
+        color = NSColor.colorWithCalibratedRed_green_blue_alpha_(int(color[1:3],16)/255.0,int(color[3:5],16)/255.0,int(color[5:7],16)/255.0,1.0)
+        self.w.setTextColor_(color)
+        self.w.setNeedsDisplay_(True)
+        
+    def set_bezeled(self,bezeled=True):
+        self.w.setBezeled_(bezeled)
+        self.w.setNeedsDisplay_(True)
         
 #MARK: TextArea
 class TextArea:
@@ -168,6 +188,20 @@ class TextArea:
         self.w.setFrameSize_((width,height))
         self.tv.setFrameSize_((width,height))
         
+    def set_background_color(self,color):
+        color = NSColor.colorWithCalibratedRed_green_blue_alpha_(int(color[1:3],16)/255.0,int(color[3:5],16)/255.0,int(color[5:7],16)/255.0,1.0)
+        self.tv.setBackgroundColor_(color)
+        self.tv.setNeedsDisplay_(True)
+        
+    def set_text_color(self,color):
+        color = NSColor.colorWithCalibratedRed_green_blue_alpha_(int(color[1:3],16)/255.0,int(color[3:5],16)/255.0,int(color[5:7],16)/255.0,1.0)
+        self.tv.setTextColor_(color)
+        self.tv.setNeedsDisplay_(True)
+        
+    def set_bezeled(self,bezeled=True):
+        self.tv.setBezeled_(bezeled)
+        self.tv.setNeedsDisplay_(True)
+        
 #MARK: Button
 class Button:
     def __init__(self,text,callback):
@@ -193,6 +227,11 @@ class Button:
         
     def set_enabled(self,enabled):
         self.w.setEnabled_(enabled)
+        
+    def set_bezel_color(self,color):
+        color = NSColor.colorWithCalibratedRed_green_blue_alpha_(int(color[1:3],16)/255.0,int(color[3:5],16)/255.0,int(color[5:7],16)/255.0,1.0)
+        self.w.setBezelColor_(color)
+        self.w.setNeedsDisplay_(True)
         
 def get_text(tf):
     print("TextField value:",tf.get_text())
@@ -305,10 +344,28 @@ class List(NSObject):
     def show_scrollbar(self,show=True):
         self.w.setHasVerticalScroller_(show)
         
+#MARK: Demo
 if __name__ == "__main__":
     win = Window()
-    win.set_title("Test Window")
+    win.set_title("demo")
     win.set_size(400,300)
-    label = Label("Hello, World!")
+    label = Label("ACW demo!")
+    label.set_text_color("#006F14")
+    label.set_size(400,30)
     win.add_widget(label)
+    textfield = TextField("Default text","Placeholder text")
+    textfield.set_background_color("#FF0000")
+    textfield.set_text_color("#FFFFFF")
+    textfield.set_bezeled(False)
+    win.add_widget(textfield)
+    textarea = TextArea("Default text in textarea","Placeholder text in textarea")
+    textarea.set_background_color("#00FF00")
+    textarea.set_text_color("#000000")
+    win.add_widget(textarea)
+    btn = Button("Purple button!",lambda: print("Button clicked!"))
+    btn.set_bezel_color("#2F001FFF")
+    win.add_widget(btn)
+    btn = Button("Blue button!",lambda: print("Button clicked!"))
+    btn.set_bezel_color("#00357AFF")
+    win.add_widget(btn)
     win.run()
