@@ -19,6 +19,7 @@ from AppKit import (
     NSViewMinYMargin,
     NSViewWidthSizable,
     NSColor,
+    NSFont
 )
 from objc import super
 from Foundation import NSObject,NSMakePoint
@@ -114,6 +115,13 @@ class Label:
         color = NSColor.colorWithCalibratedRed_green_blue_alpha_(int(color[1:3],16)/255.0,int(color[3:5],16)/255.0,int(color[5:7],16)/255.0,1.0)
         self.w.setTextColor_(color)
         self.w.setNeedsDisplay_(True)
+        
+    def set_font(self,font):
+        if isinstance(font,tuple) and len(font) == 2:
+            font = NSFont.fontWithName_size_(font[0],font[1])
+        if font is not None:
+            self.w.setFont_(font)
+            self.w.setNeedsDisplay_(True)
    
 #MARK: TextField     
 class TextField:
@@ -151,6 +159,13 @@ class TextField:
     def set_bezeled(self,bezeled=True):
         self.w.setBezeled_(bezeled)
         self.w.setNeedsDisplay_(True)
+        
+    def set_font(self,font):
+        if isinstance(font,tuple) and len(font) == 2:
+            font = NSFont.fontWithName_size_(font[0],font[1])
+        if font is not None:
+            self.w.setFont_(font)
+            self.w.setNeedsDisplay_(True)
         
 #MARK: TextArea
 class TextArea:
@@ -202,6 +217,13 @@ class TextArea:
         self.tv.setBezeled_(bezeled)
         self.tv.setNeedsDisplay_(True)
         
+    def set_font(self,font):
+        if isinstance(font,tuple) and len(font) == 2:
+            font = NSFont.fontWithName_size_(font[0],font[1])
+        if font is not None:
+            self.tv.setFont_(font)
+            self.tv.setNeedsDisplay_(True)
+        
 #MARK: Button
 class Button:
     def __init__(self,text,callback):
@@ -232,6 +254,13 @@ class Button:
         color = NSColor.colorWithCalibratedRed_green_blue_alpha_(int(color[1:3],16)/255.0,int(color[3:5],16)/255.0,int(color[5:7],16)/255.0,1.0)
         self.w.setBezelColor_(color)
         self.w.setNeedsDisplay_(True)
+        
+    def set_font(self,font):
+        if isinstance(font,tuple) and len(font) == 2:
+            font = NSFont.fontWithName_size_(font[0],font[1])
+        if font is not None:
+            self.w.setFont_(font)
+            self.w.setNeedsDisplay_(True)
         
 def get_text(tf):
     print("TextField value:",tf.get_text())
@@ -352,6 +381,7 @@ if __name__ == "__main__":
     label = Label("ACW demo!")
     label.set_text_color("#006F14")
     label.set_size(400,30)
+    label.set_font(("Arial",18))
     win.add_widget(label)
     textfield = TextField("Default text","Placeholder text")
     textfield.set_background_color("#FF0000")
@@ -361,11 +391,15 @@ if __name__ == "__main__":
     textarea = TextArea("Default text in textarea","Placeholder text in textarea")
     textarea.set_background_color("#00FF00")
     textarea.set_text_color("#000000")
+    textarea.set_font(("Comic Sans MS",12))
     win.add_widget(textarea)
     btn = Button("Purple button!",lambda: print("Button clicked!"))
     btn.set_bezel_color("#2F001FFF")
     win.add_widget(btn)
     btn = Button("Blue button!",lambda: print("Button clicked!"))
     btn.set_bezel_color("#00357AFF")
+    win.add_widget(btn)
+    btn = Button("Custom font!",lambda: print("Button clicked!"))
+    btn.set_font(("Courier",12))
     win.add_widget(btn)
     win.run()
