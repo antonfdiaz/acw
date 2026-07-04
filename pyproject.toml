@@ -1,0 +1,14 @@
+[project]
+name = "acw"
+description = "Antón's Cocoa Widgets"
+dependencies = [
+    "pyobjc-framework-Cocoa",
+]
+dynamic = ["version"]
+
+[tool.setuptools.dynamic]
+version.attr = "acw.__version__"
+
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
