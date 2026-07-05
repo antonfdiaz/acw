@@ -39,4 +39,4 @@ class VLayout:
 
             widget.w.setAutoresizingMask_(NSViewWidthSizable | NSViewMinYMargin)
             widget.w.setFrameOrigin_(NSMakePoint(self.margin_left,y-height))
-            y -= height + self.spacing
+            y -= height+self.spacing
