@@ -16,17 +16,40 @@ from AppKit import (
     NSScrollView,
     NSTableView,
     NSTableColumn,
-    NSViewMinYMargin,
-    NSViewWidthSizable,
     NSColor,
-    NSFont
+    NSFont,
+    NSViewWidthSizable
 )
 from objc import super
 from Foundation import NSObject,NSMakePoint
 
-#MARK: Window
-class Window:
+#MARK: Widget
+class Widget:
+    """Base class for all widgets."""
     def __init__(self):
+        self.layout = None
+
+    def content_view(self):
+        return self.w
+
+    def set_layout(self,layout):
+        self.layout = layout
+        self.layout.attach(self)
+
+    def add_widget(self,widget):
+        if self.layout is None:
+            self.content_view().addSubview_(widget.w)
+        else:
+            self.layout.add_widget(widget)
+
+    def relayout(self):
+        if self.layout is not None:
+            self.layout.relayout()
+
+#MARK: Window
+class Window(Widget):
+    def __init__(self):
+        Widget.__init__(self)
         with objc.autorelease_pool():
             NSApplication.sharedApplication()
             NSApp.setActivationPolicy_(NSApplicationActivationPolicyRegular)
@@ -53,11 +76,9 @@ class Window:
             )
             self.window.cascadeTopLeftFromPoint_(NSMakePoint(20,20))
             self.window.makeKeyAndOrderFront_(None)
-            
-            self.layout_margin_left = 10
-            self.layout_margin_top = 10
-            self.layout_y = self.window.contentView().frame().size.height-self.layout_margin_top
-            self.layout_spacing = 8
+
+    def content_view(self):
+        return self.window.contentView()
             
     def set_title(self,title):
         self.window.setTitle_(title)
@@ -71,16 +92,6 @@ class Window:
     def maximize_btn_disabled(self,hidden=True):
         self.window.setStyleMask_(self.window.styleMask() & ~NSResizableWindowMask if hidden else self.window.styleMask() | NSResizableWindowMask)
 
-    def add_widget(self,widget):
-        available_width = self.window.contentView().frame().size.width - (self.layout_margin_left * 2)
-        widget_height = widget.w.frame().size.height
-        if hasattr(widget, "set_size"):
-            widget.set_size(available_width, widget_height)
-        widget.w.setAutoresizingMask_(NSViewWidthSizable | NSViewMinYMargin)
-        widget.w.setFrameOrigin_(NSMakePoint(self.layout_margin_left,self.layout_y-widget_height))
-        self.layout_y -= widget_height+self.layout_spacing
-        self.window.contentView().addSubview_(widget.w)
-
     def run(self):
         NSApp.activateIgnoringOtherApps_(True)
         NSApp.run()
@@ -89,11 +100,12 @@ class Window:
         self.width = width
         self.height = height
         self.window.setContentSize_((width,height))
-        self.layout_y = self.window.contentView().frame().size.height-self.layout_margin_top
+        self.relayout()
     
 #MARK: Label    
-class Label:
+class Label(Widget):
     def __init__(self,text):
+        Widget.__init__(self)
         self.w = (
             NSTextField.alloc()
             .initWithFrame_(NSMakeRect(0,0,160,20))
@@ -110,6 +122,7 @@ class Label:
         
     def set_size(self,width,height):
         self.w.setFrameSize_((width,height))
+        self.relayout()
         
     def set_text_color(self,color):
         color = NSColor.colorWithCalibratedRed_green_blue_alpha_(int(color[1:3],16)/255.0,int(color[3:5],16)/255.0,int(color[5:7],16)/255.0,1.0)
@@ -124,8 +137,9 @@ class Label:
             self.w.setNeedsDisplay_(True)
    
 #MARK: TextField     
-class TextField:
+class TextField(Widget):
     def __init__(self,text="",placeholder=""):
+        Widget.__init__(self)
         self.w = (
             NSTextField.alloc()
             .initWithFrame_(NSMakeRect(0,0,160,20))
@@ -145,6 +159,7 @@ class TextField:
         
     def set_size(self,width,height):
         self.w.setFrameSize_((width,height))
+        self.relayout()
         
     def set_background_color(self,color):
         color = NSColor.colorWithCalibratedRed_green_blue_alpha_(int(color[1:3],16)/255.0,int(color[3:5],16)/255.0,int(color[5:7],16)/255.0,1.0)
@@ -168,8 +183,9 @@ class TextField:
             self.w.setNeedsDisplay_(True)
         
 #MARK: TextArea
-class TextArea:
+class TextArea(Widget):
     def __init__(self,text="",placeholder=""):
+        Widget.__init__(self)
         self.w = (
             NSScrollView.alloc()
             .initWithFrame_(NSMakeRect(0,0,160,80))
@@ -202,6 +218,7 @@ class TextArea:
     def set_size(self,width,height):
         self.w.setFrameSize_((width,height))
         self.tv.setFrameSize_((width,height))
+        self.relayout()
         
     def set_background_color(self,color):
         color = NSColor.colorWithCalibratedRed_green_blue_alpha_(int(color[1:3],16)/255.0,int(color[3:5],16)/255.0,int(color[5:7],16)/255.0,1.0)
@@ -225,8 +242,9 @@ class TextArea:
             self.tv.setNeedsDisplay_(True)
         
 #MARK: Button
-class Button:
+class Button(Widget):
     def __init__(self,text,callback):
+        Widget.__init__(self)
         self.w = (
             NSButton.alloc()
             .initWithFrame_(NSMakeRect(0,0,160,20))
@@ -249,6 +267,10 @@ class Button:
         
     def set_enabled(self,enabled):
         self.w.setEnabled_(enabled)
+
+    def set_size(self,width,height):
+        self.w.setFrameSize_((width,height))
+        self.relayout()
         
     def set_bezel_color(self,color):
         color = NSColor.colorWithCalibratedRed_green_blue_alpha_(int(color[1:3],16)/255.0,int(color[3:5],16)/255.0,int(color[5:7],16)/255.0,1.0)
@@ -266,11 +288,12 @@ def get_text(tf):
     print("TextField value:",tf.get_text())
     
 #MARK: Table
-class Table(NSObject):
+class Table(NSObject, Widget):
     def initWithColumns_(self,columns):
         self = objc.super(Table,self).init()
         if self is None:
             return None
+        Widget.__init__(self)
 
         self.columns = list(columns)
         self.rows = []
@@ -304,6 +327,7 @@ class Table(NSObject):
     def set_size(self,width,height):
         self.w.setFrameSize_((width,height))
         self.table.setFrameSize_((width,height))
+        self.relayout()
 
     @objc.python_method
     def add_row(self,row_data):
@@ -367,11 +391,12 @@ class Table(NSObject):
         self.w.setHasVerticalScroller_(show)
     
 #MARK: List
-class List(NSObject):
+class List(NSObject, Widget):
     def init(self):
         self = super().init()
         if self is None:
             return None
+        Widget.__init__(self)
 
         self.rows = []
 
@@ -402,6 +427,7 @@ class List(NSObject):
     def set_size(self,width,height):
         self.w.setFrameSize_((width,height))
         self.table.setFrameSize_((width,height))
+        self.relayout()
 
     @objc.python_method
     def add_row(self,text):
@@ -465,6 +491,7 @@ class List(NSObject):
 #MARK: Demo
 if __name__ == "__main__":
     from alerts import Alert
+    from layout import VLayout
     def show_msg():
         selected_items = list_widget.get_selected()
         if selected_items:
@@ -474,13 +501,14 @@ if __name__ == "__main__":
     win = Window()
     win.set_title("demo")
     win.set_size(400,300)
+    win.set_layout(VLayout())
     label = Label("ACW demo!")
     label.set_text_color("#006F14")
-    label.set_size(400,30)
+    label.set_size(160,30)
     label.set_font(("Arial",18))
     win.add_widget(label)
     list_widget = List()
-    list_widget.set_size(400,200)
+    list_widget.set_size(160,200)
     list_widget.add_row("Item 1")
     list_widget.add_row("Item 2")
     list_widget.add_row("Item 3")
