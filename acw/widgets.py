@@ -495,9 +495,9 @@ if __name__ == "__main__":
     def show_msg():
         selected_items = list_widget.get_selected()
         if selected_items:
-            Alert.show("Selected Items", "\n".join(selected_items))
+            Alert.show("Selected Items","\n".join(selected_items))
         else:
-            Alert.show("No Selection", "No items selected.")
+            Alert.show("No Selection","No items selected.")
     win = Window()
     win.set_title("demo")
     win.set_size(400,300)
