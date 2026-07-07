@@ -1,4 +1,6 @@
 from .widgets import *
+from .layout import *
+from .alerts import *
 
-__all__ = ["Widget","VLayout","HLayout","Window","Label","Button","TextField","TextArea","Table","List"]
-__version__ = "0.7.0"
+__all__ = ["Widget","VLayout","HLayout","Window","Label","Button","TextField","TextArea","Table","List","Container","Alert","InputAlert"]
+__version__ = "0.8.0"

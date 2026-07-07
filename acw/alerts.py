@@ -1,4 +1,4 @@
-from AppKit import NSAlert,NSTextField,NSAlertFirstButtonReturn
+from AppKit import NSAlert,NSTextField,NSSecureTextField,NSAlertFirstButtonReturn
 
 class Alert:
     @staticmethod
@@ -13,13 +13,14 @@ class Alert:
         
 class InputAlert:
     @staticmethod
-    def show(title,message,default="",placeholder="",rounded=False):
+    def show(title,message,default="",placeholder="",rounded=False,hidden=False):
         alert = NSAlert.alloc().init()
         alert.setMessageText_(title)
         alert.setInformativeText_(message)
         alert.addButtonWithTitle_("OK")
         alert.addButtonWithTitle_("Cancel")
-        input_field = NSTextField.alloc().initWithFrame_(((0,0),(200,24)))
+        field_class = NSSecureTextField if hidden else NSTextField
+        input_field = field_class.alloc().initWithFrame_(((0,0),(200,24)))
         input_field.setStringValue_(default)
         input_field.setPlaceholderString_(placeholder)
         if rounded:

@@ -247,6 +247,17 @@ class TextArea(Widget):
     
     def set_text(self,text):
         self.tv.setString_(text)
+
+    def append_text(self,text):
+        current_text = self.tv.string()
+        self.tv.setString_(current_text+text)
+        self.tv.scrollRangeToVisible_((len(current_text)+len(text),0))
+
+    def clear_text(self):
+        self.tv.setString_("")
+
+    def set_editable(self,editable=True):
+        self.tv.setEditable_(editable)
         
     def set_placeholder(self,placeholder):
         self.tv.setPlaceholderString_(placeholder)
@@ -467,12 +478,14 @@ class List(NSObject, Widget):
         )
 
         self.table.setDataSource_(self)
+        self.table.setDelegate_(self)
         self.table.setHeaderView_(None)
         self.w.setDocumentView_(self.table)
 
         column = NSTableColumn.alloc().initWithIdentifier_("main")
         column.setTitle_("Items")
         self.table.addTableColumn_(column)
+        self.selection_callback = None
 
         return self
 
@@ -503,6 +516,15 @@ class List(NSObject, Widget):
     def get_selected(self):
         selected_indexes = self.table.selectedRowIndexes()
         return [self.rows[i] for i in range(len(self.rows)) if selected_indexes.containsIndex_(i)]
+
+    @objc.python_method
+    def get_selected_indexes(self):
+        selected_indexes = self.table.selectedRowIndexes()
+        return [i for i in range(len(self.rows)) if selected_indexes.containsIndex_(i)]
+
+    @objc.python_method
+    def set_on_selection_change(self,callback):
+        self.selection_callback = callback
     
     @objc.python_method
     def deselect_all(self):
@@ -538,6 +560,10 @@ class List(NSObject, Widget):
         if row < len(self.rows):
             return self.rows[row]
         return ""
+
+    def tableViewSelectionDidChange_(self,notification):
+        if callable(self.selection_callback):
+            self.selection_callback()
     
     def show_scrollbar(self,show=True):
         self.w.setHasVerticalScroller_(show)
