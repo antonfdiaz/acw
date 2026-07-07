@@ -19,7 +19,8 @@ from AppKit import (
     NSColor,
     NSFont,
     NSForegroundColorAttributeName,
-    NSViewWidthSizable
+    NSViewWidthSizable,
+    NSView,
 )
 from objc import super
 from Foundation import NSObject,NSMakePoint,NSMutableAttributedString
@@ -541,10 +542,23 @@ class List(NSObject, Widget):
     def show_scrollbar(self,show=True):
         self.w.setHasVerticalScroller_(show)
         
+class Container(Widget):
+    def __init__(self):
+        Widget.__init__(self)
+        self.w = (
+            NSView.alloc()
+            .initWithFrame_(NSMakeRect(0,0,200,200))
+            .autorelease()
+        )
+        
+    def set_size(self,width,height):
+        self.w.setFrameSize_((width,height))
+        self.relayout()
+        
 #MARK: Demo
 if __name__ == "__main__":
     from alerts import Alert
-    from layout import VLayout
+    from layout import VLayout,HLayout
     def show_msg():
         selected_items = list_widget.get_selected()
         if selected_items:
@@ -568,10 +582,15 @@ if __name__ == "__main__":
     list_widget.add_row("Item 2")
     list_widget.add_row("Item 3")
     list_widget.set_multi_selection(True)
-    list_widget.set_background_color("#000000")
-    list_widget.set_text_color("#FFFFFF")
-    list_widget.set_font(("Courier",14))
     win.add_widget(list_widget)
+    btn_container = Container()
+    btn_container.set_size(160,30)
+    btn_layout = HLayout(spacing=10)
+    btn_layout.set_alignment("center")
+    btn_container.set_layout(btn_layout)
+    win.add_widget(btn_container)
     button = Button("Get Selected",show_msg)
-    win.add_widget(button)
+    btn_container.add_widget(button)
+    exit_button = Button("Exit",lambda: NSApp.terminate_(None))
+    btn_container.add_widget(exit_button)
     win.run()
