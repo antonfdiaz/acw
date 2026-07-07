@@ -18,10 +18,11 @@ from AppKit import (
     NSTableColumn,
     NSColor,
     NSFont,
+    NSForegroundColorAttributeName,
     NSViewWidthSizable
 )
 from objc import super
-from Foundation import NSObject,NSMakePoint
+from Foundation import NSObject,NSMakePoint,NSMutableAttributedString
 
 #MARK: Widget
 class Widget:
@@ -283,6 +284,7 @@ class TextArea(Widget):
 class Button(Widget):
     def __init__(self,text,callback):
         Widget.__init__(self)
+        self.text_color = None
         self.w = (
             NSButton.alloc()
             .initWithFrame_(NSMakeRect(0,0,160,20))
@@ -299,6 +301,8 @@ class Button(Widget):
             
     def set_text(self,text):
         self.w.setTitle_(text)
+        if self.text_color is not None:
+            self.set_text_color(self.text_color)
         
     def set_callback(self,callback):
         self.callback = callback
@@ -321,6 +325,15 @@ class Button(Widget):
         if font is not None:
             self.w.setFont_(font)
             self.w.setNeedsDisplay_(True)
+            
+    def set_text_color(self,color):
+        self.mark_custom_text_color()
+        self.text_color = color
+        color = NSColor.colorWithCalibratedRed_green_blue_alpha_(int(color[1:3],16)/255.0,int(color[3:5],16)/255.0,int(color[5:7],16)/255.0,1.0)
+        title = NSMutableAttributedString.alloc().initWithAttributedString_(self.w.attributedTitle())
+        title.addAttribute_value_range_(NSForegroundColorAttributeName,color,(0,len(self.w.title())))
+        self.w.setAttributedTitle_(title)
+        self.w.setNeedsDisplay_(True)
         
 def get_text(tf):
     print("TextField value:",tf.get_text())
@@ -544,7 +557,6 @@ if __name__ == "__main__":
     win.set_layout(VLayout())
     win.titlebar_hidden(True)
     win.set_background_color("#F0F0F0")
-    win.set_text_color("#EA0000")
     label = Label("ACW demo!")
     label.set_text_color("#006F14")
     label.set_size(160,30)
@@ -561,6 +573,5 @@ if __name__ == "__main__":
     list_widget.set_font(("Courier",14))
     win.add_widget(list_widget)
     button = Button("Get Selected",show_msg)
-    button.set_font(("Arial",14))
     win.add_widget(button)
     win.run()
