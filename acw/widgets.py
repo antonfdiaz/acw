@@ -76,6 +76,10 @@ class Window(Widget):
             )
             self.window.cascadeTopLeftFromPoint_(NSMakePoint(20,20))
             self.window.makeKeyAndOrderFront_(None)
+            
+    def titlebar_hidden(self,hidden=True):
+        self.window.setTitleVisibility_(2 if hidden else 0)
+        self.window.setTitlebarAppearsTransparent_(hidden)
 
     def content_view(self):
         return self.window.contentView()
@@ -502,6 +506,7 @@ if __name__ == "__main__":
     win.set_title("demo")
     win.set_size(400,300)
     win.set_layout(VLayout())
+    win.titlebar_hidden(True)
     label = Label("ACW demo!")
     label.set_text_color("#006F14")
     label.set_size(160,30)
