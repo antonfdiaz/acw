@@ -28,6 +28,8 @@ class Widget:
     """Base class for all widgets."""
     def __init__(self):
         self.layout = None
+        self.custom_text_color = False
+        self._setting_inherited_text_color = False
 
     def content_view(self):
         return self.w
@@ -46,10 +48,22 @@ class Widget:
         if self.layout is not None:
             self.layout.relayout()
 
+    def apply_inherited_text_color(self,color):
+        if hasattr(self,"set_text_color"):
+            self._setting_inherited_text_color = True
+            self.set_text_color(color)
+            self._setting_inherited_text_color = False
+
+    def mark_custom_text_color(self):
+        if not self._setting_inherited_text_color:
+            self.custom_text_color = True
+
 #MARK: Window
 class Window(Widget):
     def __init__(self):
         Widget.__init__(self)
+        self.widgets = []
+        self.text_color = None
         with objc.autorelease_pool():
             NSApplication.sharedApplication()
             NSApp.setActivationPolicy_(NSApplicationActivationPolicyRegular)
@@ -83,6 +97,12 @@ class Window(Widget):
 
     def content_view(self):
         return self.window.contentView()
+
+    def add_widget(self,widget):
+        self.widgets.append(widget)
+        Widget.add_widget(self,widget)
+        if self.text_color is not None and not widget.custom_text_color:
+            widget.apply_inherited_text_color(self.text_color)
             
     def set_title(self,title):
         self.window.setTitle_(title)
@@ -105,6 +125,17 @@ class Window(Widget):
         self.height = height
         self.window.setContentSize_((width,height))
         self.relayout()
+        
+    def set_background_color(self,color):
+        color = NSColor.colorWithCalibratedRed_green_blue_alpha_(int(color[1:3],16)/255.0,int(color[3:5],16)/255.0,int(color[5:7],16)/255.0,1.0)
+        self.window.setBackgroundColor_(color)
+        self.content_view().setNeedsDisplay_(True)
+        
+    def set_text_color(self,color):
+        self.text_color = color
+        for widget in self.widgets:
+            if not widget.custom_text_color:
+                widget.apply_inherited_text_color(color)
     
 #MARK: Label    
 class Label(Widget):
@@ -129,6 +160,7 @@ class Label(Widget):
         self.relayout()
         
     def set_text_color(self,color):
+        self.mark_custom_text_color()
         color = NSColor.colorWithCalibratedRed_green_blue_alpha_(int(color[1:3],16)/255.0,int(color[3:5],16)/255.0,int(color[5:7],16)/255.0,1.0)
         self.w.setTextColor_(color)
         self.w.setNeedsDisplay_(True)
@@ -171,6 +203,7 @@ class TextField(Widget):
         self.w.setNeedsDisplay_(True)
         
     def set_text_color(self,color):
+        self.mark_custom_text_color()
         color = NSColor.colorWithCalibratedRed_green_blue_alpha_(int(color[1:3],16)/255.0,int(color[3:5],16)/255.0,int(color[5:7],16)/255.0,1.0)
         self.w.setTextColor_(color)
         self.w.setNeedsDisplay_(True)
@@ -230,6 +263,7 @@ class TextArea(Widget):
         self.tv.setNeedsDisplay_(True)
         
     def set_text_color(self,color):
+        self.mark_custom_text_color()
         color = NSColor.colorWithCalibratedRed_green_blue_alpha_(int(color[1:3],16)/255.0,int(color[3:5],16)/255.0,int(color[5:7],16)/255.0,1.0)
         self.tv.setTextColor_(color)
         self.tv.setNeedsDisplay_(True)
@@ -367,6 +401,7 @@ class Table(NSObject, Widget):
 
     @objc.python_method
     def set_text_color(self,color):
+        self.mark_custom_text_color()
         color = NSColor.colorWithCalibratedRed_green_blue_alpha_(int(color[1:3],16)/255.0,int(color[3:5],16)/255.0,int(color[5:7],16)/255.0,1.0)
         for column in self.table.tableColumns():
             column.dataCell().setTextColor_(color)
@@ -467,6 +502,7 @@ class List(NSObject, Widget):
     
     @objc.python_method
     def set_text_color(self,color):
+        self.mark_custom_text_color()
         color = NSColor.colorWithCalibratedRed_green_blue_alpha_(int(color[1:3],16)/255.0,int(color[3:5],16)/255.0,int(color[5:7],16)/255.0,1.0)
         column = self.table.tableColumns()[0]
         column.dataCell().setTextColor_(color)
@@ -507,6 +543,8 @@ if __name__ == "__main__":
     win.set_size(400,300)
     win.set_layout(VLayout())
     win.titlebar_hidden(True)
+    win.set_background_color("#F0F0F0")
+    win.set_text_color("#EA0000")
     label = Label("ACW demo!")
     label.set_text_color("#006F14")
     label.set_size(160,30)
