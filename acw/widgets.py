@@ -22,7 +22,11 @@ from AppKit import (
     NSViewWidthSizable,
     NSView,
     NSImageView,
-    NSImage
+    NSImage,
+    NSImageLeft,
+    NSImageRight,
+    NSImageAbove,
+    NSImageBelow,
 )
 from objc import super
 from Foundation import NSObject,NSMakePoint,NSMutableAttributedString
@@ -303,6 +307,7 @@ class Button(Widget):
     def __init__(self,text,callback):
         Widget.__init__(self)
         self.text_color = None
+        self.icon_aspect_ratio = None
         self.w = (
             NSButton.alloc()
             .initWithFrame_(NSMakeRect(0,0,160,20))
@@ -330,6 +335,8 @@ class Button(Widget):
 
     def set_size(self,width,height):
         self.w.setFrameSize_((width,height))
+        if self.icon_aspect_ratio is not None:
+            self.w.image().setSize_((height*self.icon_aspect_ratio,height))
         self.relayout()
         
     def set_bezel_color(self,color):
@@ -353,6 +360,19 @@ class Button(Widget):
         self.w.setAttributedTitle_(title)
         self.w.setNeedsDisplay_(True)
         
+    def set_icon(self,image_path,alignment="left"):
+        image = NSImage.alloc().initByReferencingFile_(image_path)
+        image_size = image.size()
+        self.icon_aspect_ratio = image_size.width/image_size.height
+        height = self.w.frame().size.height
+        image.setSize_((height*self.icon_aspect_ratio,height))
+        self.w.setImage_(image)
+        if alignment == "left":
+            self.w.setImagePosition_(NSImageLeft)
+        elif alignment == "right":
+            self.w.setImagePosition_(NSImageRight)
+        self.w.setNeedsDisplay_(True)
+
 def get_text(tf):
     print("TextField value:",tf.get_text())
     
@@ -667,6 +687,9 @@ if __name__ == "__main__":
     button = Button("Get Selected",show_msg)
     btn_container.add_widget(button)
     exit_button = Button("Exit",lambda: NSApp.terminate_(None))
+    exit_button.set_bezel_color("#FF0000")
+    exit_button.set_text_color("#FFFFFF")
+    exit_button.set_icon("acw.png")
     btn_container.add_widget(exit_button)
     image_btn = ImageButton("acw.png",lambda: Alert.show("ACW","ImageButton example!"))
     image_btn.set_size(64,64)
