@@ -356,6 +356,35 @@ class Button(Widget):
 def get_text(tf):
     print("TextField value:",tf.get_text())
     
+class ImageButton(Button):
+    def __init__(self,image_path,callback):
+        Widget.__init__(self)
+        self.text_color = None
+        self.w = (
+            NSButton.alloc()
+            .initWithFrame_(NSMakeRect(0,0,160,20))
+            .autorelease()
+        )
+        image = NSImage.alloc().initByReferencingFile_(image_path)
+        self.w.setImage_(image)
+        self.w.setBordered_(False)
+        self.w.setTarget_(self)
+        self.w.setAction_("button_clicked:")
+        self.callback = callback
+
+    def set_size(self,width,height):
+        self.w.setFrameSize_((width,height))
+        image = self.w.image()
+        if image is not None:
+            image.setSize_((width,height))
+        self.relayout()
+
+    def set_image(self,image_path):
+        image = NSImage.alloc().initByReferencingFile_(image_path)
+        image.setSize_(self.w.frame().size)
+        self.w.setImage_(image)
+        self.w.setNeedsDisplay_(True)
+
 #MARK: Table
 class Table(NSObject, Widget):
     def initWithColumns_(self,columns):
@@ -590,12 +619,15 @@ class Container(Widget):
 class Image(Widget):
     def __init__(self,image_path):
         Widget.__init__(self)
-        self.w = NSImageView.alloc().initWithFrame_(NSMakeRect(0,0,200,200)).autorelease()
+        self.w = NSImageView.alloc().initWithFrame_(NSMakeRect(0,0,100,100)).autorelease()
         image = NSImage.alloc().initByReferencingFile_(image_path)
         self.w.setImage_(image)
         
     def set_size(self,width,height):
         self.w.setFrameSize_((width,height))
+        image = self.w.image()
+        if image is not None:
+            image.setSize_((width,height))
         self.relayout()
         
 #MARK: Demo
@@ -610,7 +642,7 @@ if __name__ == "__main__":
             Alert.show("No Selection","No items selected.")
     win = Window()
     win.set_title("demo")
-    win.set_size(400,300)
+    win.set_size(420,330)
     win.set_layout(VLayout())
     win.titlebar_hidden(True)
     win.set_background_color("#F0F0F0")
@@ -627,7 +659,7 @@ if __name__ == "__main__":
     list_widget.set_multi_selection(True)
     win.add_widget(list_widget)
     btn_container = Container()
-    btn_container.set_size(160,30)
+    btn_container.set_size(160,84)
     btn_layout = HLayout(spacing=10)
     btn_layout.set_alignment("center")
     btn_container.set_layout(btn_layout)
@@ -636,4 +668,7 @@ if __name__ == "__main__":
     btn_container.add_widget(button)
     exit_button = Button("Exit",lambda: NSApp.terminate_(None))
     btn_container.add_widget(exit_button)
+    image_btn = ImageButton("acw.png",lambda: Alert.show("ACW","ImageButton example!"))
+    image_btn.set_size(64,64)
+    btn_container.add_widget(image_btn)
     win.run()
