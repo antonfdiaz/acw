@@ -21,6 +21,8 @@ from AppKit import (
     NSForegroundColorAttributeName,
     NSViewWidthSizable,
     NSView,
+    NSImageView,
+    NSImage
 )
 from objc import super
 from Foundation import NSObject,NSMakePoint,NSMutableAttributedString
@@ -138,6 +140,10 @@ class Window(Widget):
         for widget in self.widgets:
             if not widget.custom_text_color:
                 widget.apply_inherited_text_color(color)
+                
+    def set_dock_icon(self,image_path):
+        image = NSImage.alloc().initByReferencingFile_(image_path)
+        NSApp.setApplicationIconImage_(image)
     
 #MARK: Label    
 class Label(Widget):
@@ -576,6 +582,17 @@ class Container(Widget):
             .initWithFrame_(NSMakeRect(0,0,200,200))
             .autorelease()
         )
+        
+    def set_size(self,width,height):
+        self.w.setFrameSize_((width,height))
+        self.relayout()
+
+class Image(Widget):
+    def __init__(self,image_path):
+        Widget.__init__(self)
+        self.w = NSImageView.alloc().initWithFrame_(NSMakeRect(0,0,200,200)).autorelease()
+        image = NSImage.alloc().initByReferencingFile_(image_path)
+        self.w.setImage_(image)
         
     def set_size(self,width,height):
         self.w.setFrameSize_((width,height))
