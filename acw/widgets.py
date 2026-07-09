@@ -689,7 +689,6 @@ if __name__ == "__main__":
     exit_button = Button("Exit",lambda: NSApp.terminate_(None))
     exit_button.set_bezel_color("#FF0000")
     exit_button.set_text_color("#FFFFFF")
-    exit_button.set_icon("acw.png")
     btn_container.add_widget(exit_button)
     image_btn = ImageButton("acw.png",lambda: Alert.show("ACW","ImageButton example!"))
     image_btn.set_size(64,64)
